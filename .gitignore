@@ -1,0 +1,25 @@
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+config/*.json
+!config/*.example.json
+*.pem
+*.key
+
+# Runtime data
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+node_modules/
+logs/
+*.log
+recordings/
+history/
+models/
+
+# Editor and operating-system files
+.DS_Store
+Thumbs.db
+.idea/
