@@ -1,63 +1,88 @@
 # HAL — Voice Assistant & Home Automation
 
-**Personal project · Work in progress**
+**Personal project by Mats Schyllander · Hardware and software prototype · Updated October 2026**
 
-A HAL 9000-inspired home assistant combining natural conversation, spoken responses and home automation through **Athom’s Homey** platform.
+HAL combines natural conversation, spoken responses and home automation through
+Homey Pro with a physical Wi-Fi speaker. The goal is an assistant that can be
+configured once and reconnect automatically when powered on.
 
-I am developing HAL as both a useful household assistant and a physical character: a familiar red eye, a calm voice and a slightly unsettling personality inspired by *2001: A Space Odyssey*.
+The current hardware is an **ESP32-WROOM-32 with a MAX98357A I²S amplifier**.
+There is no physical display. The HAL illustration and connection status are
+part of the browser interface.
 
-![HAL prototype: conversation interface, animated eye and connection status](hal-interface.png)
+![Earlier development snapshot of the HAL browser interface](hal-interface.png)
 
-## What I am building
-
-The goal is to talk to HAL naturally: ask an everyday question, request a task or control functions around the house without having to remember a rigid list of commands. The project brings together software, electronics and the practical decisions needed to make those interactions useful.
+*The image shows an earlier browser-interface snapshot. It is not a photograph
+of the physical unit or a record of the latest hardware connection state.*
 
 ## Current development status
 
-| Part | Status |
+| Part | Current implementation |
 | --- | --- |
-| Browser interface | Prototype with conversation, text-to-speech, history and connection status |
-| NAS-hosted voice service | Implemented in the software prototype, using Piper for speech synthesis |
-| Homey integration | Connected in the current prototype; device selection and natural-language requests are being developed and refined |
-| AI conversation | Integrated into the prototype; response behaviour and interaction remain under development |
-| ESP32 integration | Planned hardware integration; no ESP32 connected in the screenshot above |
-| Physical audio and enclosure | In development; the complete physical assistant is not yet assembled and verified |
+| Browser interface | Conversation, text input, browser microphone, voice settings, device setup and connection status. |
+| NAS backend | Python application in Docker: AI routing, Piper speech synthesis, Homey control and a bounded audio queue. |
+| AI conversation | Selected ChatGPT account connection or Ollama; Ollama currently runs on a separate computer. |
+| Home automation | Homey Pro HTTPS API for device discovery and validated commands. |
+| Physical audio | ESP32-WROOM-32 retrieves queued WAV audio over Wi-Fi and plays it through a MAX98357A amplifier. |
+| Network setup | One-time USB provisioning from the web interface, with settings stored in NVS and reused after restart. |
+| Volume | Browser selection of audio output and volume for the next utterance sent to the ESP32 speaker. |
+| Standalone listening | Not implemented on the ESP32. Speech input still uses the browser microphone and speech recognition. |
 
-The screenshot shows a development snapshot, not a finished product. A connection indicator does not mean that every possible command or device has been tested.
+The WROOM audio path has been tested on hardware. The prototype is still under
+development; individual playback tests do not establish long-term reliability
+or a finished product.
 
-## System direction
+## System architecture
 
 ```mermaid
 flowchart LR
-    User[User] <-->|Conversation| UI[Browser interface]
-    UI <--> Services[NAS-hosted application and voice service]
-    Services <--> AI[AI conversation]
-    Services <--> Homey[Athom Homey]
+    User[User: text or browser speech recognition] --> UI[Browser interface]
+    UI <--> Backend[NAS application]
+    Backend <--> AI[ChatGPT or Ollama]
+    Backend <--> Homey[Homey Pro]
     Homey <--> Devices[Home devices]
-    Services -. Planned hardware integration .-> ESP[ESP32 and physical HAL unit]
+    Backend --> Voice[Piper speech synthesis]
+    Voice --> Speaker[Wi-Fi: WROOM and MAX98357A speaker]
+    Voice --> Browser[Alternative: browser audio]
+    Speaker --> Backend
 ```
 
-The NAS hosts the application and voice services. Homey provides the connection to the smart home. The planned ESP32 integration will connect the software work with the physical build; the detailed hardware arrangement is still being developed.
+The NAS handles the application, speech synthesis and audio queue. The ESP32
+plays audio and reports its status. Homey Pro controls household devices;
+it is not used as the HAL speaker.
 
-## Development focus
+## Hardware and remaining work
 
-- Making conversation and spoken responses practical in everyday use.
-- Interpreting device and room names, including asking for clarification when a request is ambiguous.
-- Developing and testing the connection between conversation and home control.
-- Integrating the ESP32, audio hardware and physical enclosure.
-- Testing the complete interaction with real hardware.
+The active firmware uses Zephyr on ESP32-WROOM-32. The MAX98357A uses GPIO27
+for BCLK, GPIO14 for LRC and GPIO22 for DIN, with 5 V power and a shared ground.
+The previous ESP32-C3/display prototype and Homey speaker experiment have
+been retired.
 
-## Working with AI
+The physical unit still needs microphone input, speech recognition integration,
+a wake-word solution and a way to stop playback. The browser currently listens
+and speaks in turn. Browser wake-phrase and speaker-interruption experiments
+are not standalone ESP32 features.
 
-I use AI-assisted development tools to understand code, explore alternatives and build prototypes. This gives me more room to focus on the product, ideas and solutions. I define the intended behaviour, assess suggestions, choose the next development steps and test the results.
+Further work includes general setup for other networks, recovery testing and
+long-running trials. Normal home-network reconnection does not require a
+Windows hotspot; the hotspot path is a development aid.
 
 ## About this repository
 
-This initial release documents the project and its current direction. Application and firmware source code will be added as the project is prepared for public release. It is not currently an installable software package.
+This public repository presents the project and its progress. Application and
+firmware source code are not published here. It is not an installable package
+or a commercially released product.
+
+I use AI-assisted development tools to explore solutions, understand code and
+build prototypes. I define the intended behaviour, choose the development
+steps and assess the results through software and hardware testing.
 
 ## Physical build reference
 
-The physical HAL build draws inspiration from [Making HAL 9000 — Golden Armor / Chaucer44](http://chaucer44.squarespace.com/hal9000/making-hal-9000.html). This is an external build reference; its photographs and construction work are not presented as my own.
+The enclosure concept draws inspiration from
+[Making HAL 9000 — Golden Armor / Chaucer44](http://chaucer44.squarespace.com/hal9000/making-hal-9000.html).
+This is an external reference; its photographs and construction work are not
+presented as my own.
 
 ---
 
