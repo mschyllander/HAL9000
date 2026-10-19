@@ -6,7 +6,7 @@ HAL combines natural conversation, spoken responses and home automation through
 Homey Pro with a physical Wi-Fi speaker. The goal is an assistant that can be
 configured once and reconnect automatically when powered on.
 
-The current hardware is an **ESP32-WROOM-32 with a MAX98357A I²S amplifier**.
+The current hardware is an **ESP32-VROOM with a MAX98357A I²S amplifier**.
 There is no physical display. The HAL illustration and connection status are
 part of the browser interface.
 
@@ -23,12 +23,12 @@ of the physical unit or a record of the latest hardware connection state.*
 | NAS backend | Python application in Docker: AI routing, Piper speech synthesis, Homey control and a bounded audio queue. |
 | AI conversation | Selected ChatGPT account connection or Ollama; Ollama currently runs on a separate computer. |
 | Home automation | Homey Pro HTTPS API for device discovery and validated commands. |
-| Physical audio | ESP32-WROOM-32 retrieves queued WAV audio over Wi-Fi and plays it through a MAX98357A amplifier. |
+| Physical audio | ESP32-VROOM retrieves queued WAV audio over Wi-Fi and plays it through a MAX98357A amplifier. |
 | Network setup | One-time USB provisioning from the web interface, with settings stored in NVS and reused after restart. |
 | Volume | Browser selection of audio output and volume for the next utterance sent to the ESP32 speaker. |
-| Standalone listening | Not implemented on the ESP32. Speech input still uses the browser microphone and speech recognition. |
+| Microphone and electronics | The electronics, including the microphone, are complete according to the builder. The current browser conversation flow uses browser speech recognition. |
 
-The WROOM audio path has been tested on hardware. The prototype is still under
+The ESP32-VROOM audio path has been tested on hardware. The prototype is still under
 development; individual playback tests do not establish long-term reliability
 or a finished product.
 
@@ -42,7 +42,7 @@ flowchart LR
     Backend <--> Homey[Homey Pro]
     Homey <--> Devices[Home devices]
     Backend --> Voice[Piper speech synthesis]
-    Voice --> Speaker[Wi-Fi: WROOM and MAX98357A speaker]
+    Voice --> Speaker[Wi-Fi: ESP32-VROOM and MAX98357A speaker]
     Voice --> Browser[Alternative: browser audio]
     Speaker --> Backend
 ```
@@ -53,15 +53,22 @@ it is not used as the HAL speaker.
 
 ## Hardware and remaining work
 
-The active firmware uses Zephyr on ESP32-WROOM-32. The MAX98357A uses GPIO27
+The active firmware uses Zephyr on ESP32-VROOM. The MAX98357A uses GPIO27
 for BCLK, GPIO14 for LRC and GPIO22 for DIN, with 5 V power and a shared ground.
 The previous ESP32-C3/display prototype and Homey speaker experiment have
 been retired.
 
-The physical unit still needs microphone input, speech recognition integration,
-a wake-word solution and a way to stop playback. The browser currently listens
-and speaks in turn. Browser wake-phrase and speaker-interruption experiments
-are not standalone ESP32 features.
+The electronics, including the microphone and speaker, are complete according
+to the builder. The next hardware-related firmware task is the HAL eye: an LED
+that pulses while HAL speaks, rather than a physical display. A dedicated
+`eyecontroller.c` / `eyecontroller.h` module is planned, initialized from `main.c`
+and driven by actual audio playback events. This LED controller has not yet
+been implemented.
+
+The checked firmware snapshot still reports `microphone: false`; its status
+reporting needs to be reconciled with the implemented microphone path.
+The browser currently listens and speaks in turn. Browser wake-phrase and
+speaker-interruption experiments remain separate software development features.
 
 Further work includes general setup for other networks, recovery testing and
 long-running trials. Normal home-network reconnection does not require a
